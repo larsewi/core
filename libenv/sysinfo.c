@@ -3335,6 +3335,52 @@ void GetDefVars(EvalContext *ctx)
         "jq --compact-output --monochrome-output --ascii-output --unbuffered --sort-keys",
         CF_DATA_TYPE_STRING, "invocation,source=agent,command_name=jq");
 }
+
+/*****************************************************************************/
+
+void SysOSVersionMajor(EvalContext *ctx) {
+    assert(ctx != NULL);
+    const char *lval = "os_version_major";
+
+#ifdef __linux__
+    char *file_path = NULL;
+    if (access("/etc/os-release", R_OK) != -1)
+    {
+        file_path = "/etc/os-release";
+    }
+    else if (access("/usr/lib/os-release", R_OK) != -1)
+    {
+        file_path = "/usr/lib/os-release";
+    }
+
+    if (file_path != NULL) {
+        JsonElement *os_release_json = JsonReadDataFile(__func__, file_path,
+                                                        DATAFILETYPE_ENV,
+                                                        100 * 1024);
+        if (os_release_json != NULL)
+        {
+            const char *os_release_id = JsonObjectGetAsString(os_release_json, 
+                                                              "VERSION_ID");
+            if (os_release_id != NULL)
+            {
+                // extract major
+                char *needle = strchr(os_release_id, '.');
+                if (needle != NULL)
+                {
+                    *needle = '\0';
+                }
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval, 
+                                              os_release_id, 
+                                              CF_DATA_TYPE_STRING, 
+                                              "source=agent");
+            }
+            JsonDestroy(os_release_json);
+        }
+        return;
+    }
+#endif /* __linux__ */
+}
+
 /*****************************************************************************/
 
 void DetectEnvironment(EvalContext *ctx)
@@ -3347,4 +3393,5 @@ void DetectEnvironment(EvalContext *ctx)
     OSClasses(ctx);
     GetSysVars(ctx);
     GetDefVars(ctx);
+    SysOSVersionMajor(ctx);
 }
