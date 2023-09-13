@@ -16,21 +16,20 @@ body common control
 
 bundle agent init
 {
-  vars:
-      "agent_regex" string => ".*cf-agent.*";
 }
 
 #######################################################
 
 bundle agent test
 {
-  vars:
-      "res1" data => findprocesses("${init.agent_regex}");
+  meta:
+    "description" -> { "CFE-4244" }
+      string => "Test that the function result cache checks function name";
 
-  classes:
-      # must not reuse result from previous line
-      # is reused, produces a type error
-      "_pass" expression => processexists("${init.agent_regex}");
+  vars:
+    "res1" string => format("cfengine.com");
+    # must not reuse result from previous line
+    "res2" string => canonify("cfengine.com");
 }
 
 
@@ -38,10 +37,10 @@ bundle agent test
 
 bundle agent check
 {
-  methods:
-    _pass:: 
-      "pass" usebundle => dcs_pass("$(this.promise_filename)");
+  reports:
+    DEBUG::
+      "res1!=res2 -> '$(test.res1)'!='$(test.res2)'";
 
-    !_pass::
-      "pass" usebundle => dcs_fail("$(this.promise_filename)");
+  methods:
+      "any" usebundle => dcs_check_strcmp("${test.res1}", "${test.res2}", "$(this.promise_filename)", "yes");
 }
