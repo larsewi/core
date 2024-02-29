@@ -676,7 +676,7 @@ int UpdatePackagesDB(Rlist *data, const char *pm_name, UpdateType type)
                                              package_data[1], package_data[2],
                                              type);
 
-                        BufferAppendF(inventory_data, "%s,%s,%s\n",
+                        BufferAppendF(inventory_data, "\"%s\",\"%s\",\"%s\"\n",
                                       package_data[0], package_data[1],
                                       package_data[2]);
                     }
@@ -726,7 +726,7 @@ int UpdatePackagesDB(Rlist *data, const char *pm_name, UpdateType type)
             WritePackageDataToDB(db_cached, package_data[0],
                              package_data[1], package_data[2], type);
 
-            BufferAppendF(inventory_data, "%s,%s,%s\n", package_data[0],
+            BufferAppendF(inventory_data, "\"%s\",\"%s\",\"%s\"\n", package_data[0],
                           package_data[1], package_data[2]);
         }
         else if (package_data[0] || package_data[1] || package_data[2])
