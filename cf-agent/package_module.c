@@ -747,6 +747,12 @@ int UpdatePackagesDB(Rlist *data, const char *pm_name, UpdateType type)
         CsvWriterClose(idcw);
         char *inventory_list = StringWriterClose(idw);
 
+        // Legacy: the lines are expected to be separated by newlines, not CRLF
+        const size_t buf_size = strlen(inventory_list);
+        NDEBUG_UNUSED const ssize_t num_repl =
+            StringReplace(inventory_list, buf_size, "\r\n", "\n");
+        assert(num_repl >= 0);
+
         /* We can have empty list of installed software or available updates. */
         if (inventory_list == NULL)
         {
