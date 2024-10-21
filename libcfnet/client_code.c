@@ -754,7 +754,8 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
 {
     assert(conn != NULL);
 
-    char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
+    char buf[CF_BUFSIZE + sizeof(int)]; /* Note CF_BUFSIZE not buf_size !! */
+    char workbuf[CF_BUFSIZE], cfchangedstr[265];
     const int buf_size = 2048;
 
     /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
@@ -799,8 +800,6 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
         return false;
     }
 
-    buf = xmalloc(CF_BUFSIZE + sizeof(int));    /* Note CF_BUFSIZE not buf_size !! */
-
     Log(LOG_LEVEL_VERBOSE, "Copying remote file '%s:%s', expecting %jd bytes",
           conn->this_server, source, (intmax_t)size);
 
@@ -844,7 +843,6 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
                 conn->this_server, source, n_read);
 
             close(dd);
-            free(buf);
             return false;
         }
 
@@ -856,7 +854,6 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
             Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied",
                 conn->this_server, source);
             close(dd);
-            free(buf);
             return false;
         }
 
@@ -865,7 +862,6 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
             Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying",
                 conn->this_server, source);
             close(dd);
-            free(buf);
             return false;
         }
 
@@ -883,7 +879,6 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
             Log(LOG_LEVEL_INFO, "Network access to cleartext '%s:%s' denied",
                 conn->this_server, source);
             close(dd);
-            free(buf);
             return false;
         }
 
@@ -894,7 +889,6 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
             Log(LOG_LEVEL_ERR,
                 "Local disk write failed copying '%s:%s' to '%s'",
                 conn->this_server, source, dest);
-            free(buf);
             unlink(dest);
             close(dd);
             FlushFileStream(conn->conn_info->sd, size - n_wrote_total - n_read);
@@ -912,7 +906,6 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
             Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying",
                 conn->this_server, source);
             close(dd);
-            free(buf);
             return false;
         }
     }
@@ -924,11 +917,9 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
     if (!ret)
     {
         unlink(dest);
-        free(buf);
         FlushFileStream(conn->conn_info->sd, size - n_wrote_total);
         return false;
     }
 
-    free(buf);
     return true;
 }
