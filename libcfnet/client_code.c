@@ -764,7 +764,8 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
         return EncryptCopyRegularFileNet(source, dest, size, conn);
     }
 
-    snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
+    NDEBUG_UNUSED int rc = snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
+    assert(rc >= 0 && rc < sizeof(cfchangedstr));
 
     if ((strlen(dest) > CF_BUFSIZE - 20))
     {
