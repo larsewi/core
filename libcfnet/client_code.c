@@ -752,6 +752,8 @@ static void FlushFileStream(int sd, int toget)
 bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
                         bool encrypt, AgentConnection *conn, mode_t mode)
 {
+    assert(conn != NULL);
+
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
     const int buf_size = 2048;
 
@@ -901,6 +903,18 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
         }
 
         n_wrote_total += n_read;
+
+        /* A sanity check to make sure we don't write more than the original
+         * filesize acquired by SYNCH ... STAT source. This might happen if
+         * the file was changed while copying. */
+        if (n_wrote_total > size)
+        {
+            Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying",
+                conn->this_server, source);
+            close(dd);
+            free(buf);
+            return false;
+        }
     }
 
     const bool do_sync = false;
