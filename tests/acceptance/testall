@@ -23,6 +23,8 @@
 # included file COSL.txt.
 #
 
+set -x
+
 #
 # Detect and replace non-POSIX shell
 #
