@@ -226,14 +226,20 @@ AS_IF([test x"$enable_fhs" = xyes], [
     prefix=/var/cfengine
     case "$target_os" in
       mingw*)
-        WORKDIR=$(wine cmd.exe /c "echo %PROGRAMFILES%\\Cfengine" 2>/dev/null |  sed 's/\\/\\\\/g')
+        # Compile-time fallback only: on Windows the workdir is resolved at
+        # runtime from %PROGRAMFILES% (see enterprise
+        # libcfenterprise/win_sysinfo.c:GetDefaultDir_helper) and is further
+        # overridden by --with-workdir below. Hardcode the literal (doubled
+        # backslashes for the C string) instead of shelling out to Wine, which
+        # the wixl build image no longer ships. See ENT-13868.
+        WORKDIR='C:\\Program Files\\Cfengine'
         MASTERDIR=default
         INPUTDIR=default
         DATADIR=default
         KEYDIR=default
-        LOGDIR=$(wine cmd.exe /c "echo %PROGRAMFILES%\\Cfengine" 2>/dev/null |  sed 's/\\/\\\\/g')
+        LOGDIR='C:\\Program Files\\Cfengine'
         MODULEDIR=default
-        PIDDIR=$(wine cmd.exe /c "echo %PROGRAMFILES%\\Cfengine" 2>/dev/null |  sed 's/\\/\\\\/g')
+        PIDDIR='C:\\Program Files\\Cfengine'
         STATEDIR=default
       ;;
       *)
